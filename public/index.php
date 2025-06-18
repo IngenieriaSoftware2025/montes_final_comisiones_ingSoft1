@@ -18,11 +18,11 @@ $router->get('/API/logout', [AppController::class,'logout']);
 $router->get('/inicio', [AppController::class,'renderInicio']);
 
 //RUTAS PARA USUARIOS
-$router->get('/usuarios', [RegistroController::class,'renderizarPagina']);
-$router->post('/usuarios/guardar', [RegistroController::class,'guardarAPI']);
-$router->get('/usuarios/buscar', [RegistroController::class,'buscarUsuarios']);
-$router->post('/usuarios/modificar', [RegistroController::class,'modificarUsuario']);
-$router->post('/usuarios/eliminar', [RegistroController::class,'eliminarUsuario']);
+$router->get('/usuarios', [RegistroController::class, 'renderizarPagina']);
+$router->post('/usuarios/guardar', [RegistroController::class, 'guardarAPI']);
+$router->get('/usuarios/buscar', [RegistroController::class, 'buscarUsuarios']);
+$router->post('/usuarios/modificar', [RegistroController::class, 'modificarUsuario']);
+$router->post('/usuarios/eliminar', [RegistroController::class, 'eliminarUsuario']);
 
 //RUTAS PARA APLICACIONES
 $router->get('/aplicaciones', [RegistroController::class,'renderizarPagina']);

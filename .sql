@@ -3,7 +3,9 @@
 CREATE TABLE jemg_usuario(
 usuario_id SERIAL PRIMARY KEY,
 usuario_nom1 VARCHAR (50) NOT NULL,
+usuario_nom2 VARCHAR (50) NOT NULL,
 usuario_ape1 VARCHAR (50) NOT NULL,
+usuario_ape2 VARCHAR (50) NOT NULL,
 usuario_tel INT NOT NULL, 
 usuario_direc VARCHAR (150) NOT NULL,
 usuario_dpi VARCHAR (13) NOT NULL,
