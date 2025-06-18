@@ -19,7 +19,7 @@ class RegistroController extends ActiveRecord
     {
         getHeadersApi();
 
-        // Sanitización de primer nombre
+        // Sanitización de primer nombre con validación
         $_POST['usuario_nom1'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_nom1']))));
         
         $cantidad_nombre = strlen($_POST['usuario_nom1']);
@@ -28,12 +28,12 @@ class RegistroController extends ActiveRecord
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'El nombre debe tener más de 1 carácter'
+                'mensaje' => 'El primer nombre debe tener más de 1 carácter'
             ]);
-            exit;
+            return;
         }
         
-        // Sanitización de primer apellido
+        // Sanitización de primer apellido con validación
         $_POST['usuario_ape1'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_ape1']))));
         $cantidad_apellido = strlen($_POST['usuario_ape1']);
         
@@ -41,32 +41,57 @@ class RegistroController extends ActiveRecord
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'El apellido debe tener más de 1 carácter'
+                'mensaje' => 'El primer apellido debe tener más de 1 carácter'
             ]);
-            exit;
+            return;
         }
         
-        // Validación de teléfono (INT en PostgreSQL)
+        // Validación de teléfono como entero
         $_POST['usuario_tel'] = filter_var($_POST['usuario_tel'], FILTER_SANITIZE_NUMBER_INT);
-        if (strlen($_POST['usuario_tel']) != 8 || !is_numeric($_POST['usuario_tel'])) {
+        
+        if (strlen((string)$_POST['usuario_tel']) != 8) {
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'El teléfono debe tener 8 números'
+                'mensaje' => 'El teléfono debe tener exactamente 8 dígitos'
             ]);
-            exit;
+            return;
         }
         
         // Sanitización de dirección
         $_POST['usuario_direc'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_direc']))));
         
-        // Validación de DPI (VARCHAR en PostgreSQL)
-        $_POST['usuario_dpi'] = trim(htmlspecialchars($_POST['usuario_dpi']));
-        if (strlen($_POST['usuario_dpi']) != 13 || !is_numeric($_POST['usuario_dpi'])) {
+        // Validación de DPI como string de 13 caracteres
+        $_POST['usuario_dpi'] = filter_var($_POST['usuario_dpi'], FILTER_VALIDATE_INT);
+        
+        if (strlen($_POST['usuario_dpi']) != 13) {
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'El DPI debe tener exactamente 13 dígitos'
+                'mensaje' => 'La cantidad de digitos del DPI debe de ser igual a 13'
+            ]);
+            return;
+        }
+        
+        // Sanitización y validación de correo        
+        $_POST['usuario_correo'] = filter_var($_POST['usuario_correo'], FILTER_SANITIZE_EMAIL);
+
+        if (!filter_var($_POST['usuario_correo'], FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'El correo electronico ingresado es invalido'
+            ]);
+            return;
+        }
+        
+        // Verificar si el correo ya existe
+        $usuarioExistente = self::fetchFirst("SELECT usuario_id FROM jemg_usuarios WHERE usuario_correo = '{$_POST['usuario_correo']}'");
+        if ($usuarioExistente) {
+            http_response_code(400);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'El correo electrónico ya está registrado'
             ]);
             exit;
         }
@@ -82,9 +107,32 @@ class RegistroController extends ActiveRecord
             exit;
         }
         
-        // Generar token único
+        // Validación de contraseña
+        if (strlen($_POST['usuario_contra']) < 8) {
+            http_response_code(400);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'La contraseña debe tener al menos 8 caracteres'
+            ]);
+            exit;
+        }
+        
+        // Validación de confirmación de contraseña
+        if ($_POST['usuario_contra'] !== $_POST['confirmar_contra']) {
+            http_response_code(400);
+            echo json_encode([
+                'codigo' => 0,
+                'mensaje' => 'Las contraseñas no coinciden'
+            ]);
+            exit;
+        }
+        
+        // Generación de token único
         $_POST['usuario_token'] = uniqid();
         $dpi = $_POST['usuario_dpi'];
+        
+        
+        $_POST['usuario_situacion'] = 1;
         
         // Manejo de fotografía
         $file = $_FILES['usuario_fotografia'];
@@ -94,7 +142,7 @@ class RegistroController extends ActiveRecord
         $fileError = $file['error'];
         
         $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-
+        
         // Extensiones permitidas
         $allowed = ['jpg', 'jpeg', 'png'];
         
@@ -102,7 +150,7 @@ class RegistroController extends ActiveRecord
             http_response_code(400);
             echo json_encode([
                 'codigo' => 2,
-                'mensaje' => 'Solo se pueden cargar archivos JPG, PNG o JPEG',
+                'mensaje' => 'Solo se permiten archivos JPG, PNG o JPEG',
             ]);
             exit;
         }
@@ -121,11 +169,23 @@ class RegistroController extends ActiveRecord
             $subido = move_uploaded_file($file['tmp_name'], __DIR__ . "../../" . $ruta);
             
             if ($subido) {
+                // Hash de la contraseña
+                $_POST['usuario_contra'] = password_hash($_POST['usuario_contra'], PASSWORD_DEFAULT);
+                
+            
+                $_POST['usuario_fotografia'] = $ruta;
+                
+                
+                unset($_POST['usuario_nom2']);
+                unset($_POST['usuario_ape2']);
+                unset($_POST['confirmar_contra']);
+                unset($_POST['usuario_fecha_creacion']);
+                unset($_POST['usuario_fecha_contra']);
+                
                 $usuario = new Usuarios($_POST);
-                $usuario->usuario_fotografia = $ruta;
                 $resultado = $usuario->crear();
 
-                if($resultado['resultado'] == 1){
+                if($resultado['resultado'] == 1) {
                     http_response_code(200);
                     echo json_encode([
                         'codigo' => 1,
@@ -137,17 +197,23 @@ class RegistroController extends ActiveRecord
                     echo json_encode([
                         'codigo' => 0,
                         'mensaje' => 'Error al registrar el usuario',
-                        'datos' => $_POST,
-                        'usuario' => $usuario,
+                        'detalle' => $resultado
                     ]);
                     exit;
                 }
-            } 
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Error al subir la fotografía'
+                ]);
+                exit;
+            }
         } else {
             http_response_code(500);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'Error en la carga de fotografía',
+                'mensaje' => 'Error en la carga de fotografía'
             ]);
             exit;
         }
@@ -187,98 +253,149 @@ class RegistroController extends ActiveRecord
         }
     }
 
-    public static function modificarUsuario()
+    
+
+    // Función adicional para modificación parcial (PATCH)
+    public static function modificarUsuarioParcial()
     {
         getHeadersApi();
-
-        $id = $_POST['usuario_id'];
-
-        // Sanitización de primer nombre
-        $_POST['usuario_nom1'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_nom1']))));
-        if (strlen($_POST['usuario_nom1']) < 2) {
+        
+        if (!isset($_POST['usuario_id']) || empty($_POST['usuario_id'])) {
             http_response_code(400);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'El nombre debe tener más de 1 carácter'
+                'mensaje' => 'El ID del usuario es requerido'
             ]);
             return;
         }
 
-        // Sanitización de primer apellido
-        $_POST['usuario_ape1'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_ape1']))));
-        if (strlen($_POST['usuario_ape1']) < 2) {
-            http_response_code(400);
+        $id = (int)$_POST['usuario_id'];
+        
+        // Verificar que el usuario existe
+        $usuarioExiste = self::fetchFirst("SELECT usuario_id FROM jemg_usuarios WHERE usuario_id = $id AND usuario_situacion = 1");
+        if (!$usuarioExiste) {
+            http_response_code(404);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'El apellido debe tener más de 1 carácter'
-            ]);
-            return;
-        }
-
-        // Validación de teléfono (INT en PostgreSQL)
-        $_POST['usuario_tel'] = filter_var($_POST['usuario_tel'], FILTER_SANITIZE_NUMBER_INT);
-        if (strlen($_POST['usuario_tel']) != 8 || !is_numeric($_POST['usuario_tel'])) {
-            http_response_code(400);
-            echo json_encode([
-                'codigo' => 0,
-                'mensaje' => 'El teléfono debe tener 8 números'
-            ]);
-            return;
-        }
-
-        // Sanitización de dirección
-        $_POST['usuario_direc'] = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_direc']))));
-
-        // Validación de DPI (VARCHAR en PostgreSQL)
-        $_POST['usuario_dpi'] = trim(htmlspecialchars($_POST['usuario_dpi']));
-        if (strlen($_POST['usuario_dpi']) != 13 || !is_numeric($_POST['usuario_dpi'])) {
-            http_response_code(400);
-            echo json_encode([
-                'codigo' => 0,
-                'mensaje' => 'El DPI debe tener exactamente 13 dígitos'
-            ]);
-            return;
-        }
-
-        // Verificar si el DPI ya existe (excluyendo el usuario actual)
-        $dpiExistente = self::fetchFirst("SELECT usuario_id FROM jemg_usuarios WHERE usuario_dpi = '{$_POST['usuario_dpi']}' AND usuario_id != $id");
-        if ($dpiExistente) {
-            http_response_code(400);
-            echo json_encode([
-                'codigo' => 0,
-                'mensaje' => 'El DPI ya está registrado por otro usuario'
+                'mensaje' => 'Usuario no encontrado o inactivo'
             ]);
             return;
         }
 
         try {
-            $data = Usuarios::find($id);
-            $data->sincronizar([
-                'usuario_nom1' => $_POST['usuario_nom1'],
-                'usuario_ape1' => $_POST['usuario_ape1'],
-                'usuario_tel' => intval($_POST['usuario_tel']), // Convertir a entero para PostgreSQL
-                'usuario_direc' => $_POST['usuario_direc'],
-                'usuario_dpi' => $_POST['usuario_dpi'],
-                'usuario_situacion' => 1
-            ]);
+            $campos_actualizar = [];
+            $validaciones_ok = true;
+            $errores = [];
+
+            // Validar y preparar solo los campos enviados
+            if (isset($_POST['usuario_nom1']) && !empty($_POST['usuario_nom1'])) {
+                $nom1 = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_nom1']))));
+                if (strlen($nom1) >= 2) {
+                    $campos_actualizar[] = "usuario_nom1 = '$nom1'";
+                } else {
+                    $errores[] = 'El primer nombre debe tener más de 1 carácter';
+                    $validaciones_ok = false;
+                }
+            }
+
+            if (isset($_POST['usuario_ape1']) && !empty($_POST['usuario_ape1'])) {
+                $ape1 = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_ape1']))));
+                if (strlen($ape1) >= 2) {
+                    $campos_actualizar[] = "usuario_ape1 = '$ape1'";
+                } else {
+                    $errores[] = 'El primer apellido debe tener más de 1 carácter';
+                    $validaciones_ok = false;
+                }
+            }
+
+            if (isset($_POST['usuario_tel']) && !empty($_POST['usuario_tel'])) {
+                $tel = (int)filter_var($_POST['usuario_tel'], FILTER_SANITIZE_NUMBER_INT);
+                if (strlen((string)$tel) == 8) {
+                    $campos_actualizar[] = "usuario_tel = $tel";
+                } else {
+                    $errores[] = 'El teléfono debe tener exactamente 8 dígitos';
+                    $validaciones_ok = false;
+                }
+            }
+
+            if (isset($_POST['usuario_direc']) && !empty($_POST['usuario_direc'])) {
+                $direc = ucwords(strtolower(trim(htmlspecialchars($_POST['usuario_direc']))));
+                if (strlen($direc) >= 5) {
+                    $campos_actualizar[] = "usuario_direc = '$direc'";
+                } else {
+                    $errores[] = 'La dirección debe ser más específica';
+                    $validaciones_ok = false;
+                }
+            }
+
+            if (isset($_POST['usuario_correo']) && !empty($_POST['usuario_correo'])) {
+                $correo = strtolower(trim(filter_var($_POST['usuario_correo'], FILTER_SANITIZE_EMAIL)));
+                if (filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                    // Verificar duplicados
+                    $existeCorreo = self::fetchFirst("SELECT usuario_id FROM jemg_usuarios WHERE usuario_correo = '$correo' AND usuario_id != $id");
+                    if (!$existeCorreo) {
+                        $campos_actualizar[] = "usuario_correo = '$correo'";
+                    } else {
+                        $errores[] = 'El correo ya está registrado por otro usuario';
+                        $validaciones_ok = false;
+                    }
+                } else {
+                    $errores[] = 'Formato de correo electrónico inválido';
+                    $validaciones_ok = false;
+                }
+            }
+
+            if (!$validaciones_ok) {
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Errores de validación encontrados',
+                    'errores' => $errores
+                ]);
+                return;
+            }
+
+            if (empty($campos_actualizar)) {
+                http_response_code(400);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'No se enviaron campos válidos para actualizar'
+                ]);
+                return;
+            }
+
+            // Ejecutar actualización parcial
+            $set_clause = implode(', ', $campos_actualizar);
+            $sql = "UPDATE jemg_usuarios SET $set_clause WHERE usuario_id = $id AND usuario_situacion = 1";
             
-            $data->actualizar();
-            
-            http_response_code(200);
-            echo json_encode([
-                'codigo' => 1,
-                'mensaje' => 'La información del usuario ha sido modificada exitosamente'
-            ]);
-            
+            $resultado = self::ejecutar($sql);
+
+            if ($resultado) {
+                http_response_code(200);
+                echo json_encode([
+                    'codigo' => 1,
+                    'mensaje' => 'Usuario actualizado parcialmente con éxito',
+                    'campos_actualizados' => count($campos_actualizar),
+                    'usuario_id' => $id
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode([
+                    'codigo' => 0,
+                    'mensaje' => 'Error al actualizar el usuario'
+                ]);
+            }
+
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
                 'codigo' => 0,
-                'mensaje' => 'Error al modificar usuario',
+                'mensaje' => 'Error en la actualización parcial',
                 'detalle' => $e->getMessage()
             ]);
         }
     }
+
 
     public static function eliminarUsuario()
     {
@@ -304,4 +421,7 @@ class RegistroController extends ActiveRecord
             ]);
         }
     }
+
+
+    
 }

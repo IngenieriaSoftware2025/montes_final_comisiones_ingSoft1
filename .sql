@@ -1,18 +1,22 @@
--- TABLAS PRINCIPALES
 
-CREATE TABLE jemg_usuarios(
-    usuario_id SERIAL PRIMARY KEY,
-    usuario_nom1 VARCHAR(50) NOT NULL,
-    usuario_ape1 VARCHAR(50) NOT NULL,
-    usuario_tel INT NOT NULL, 
-    usuario_direc VARCHAR(150) NOT NULL,
-    usuario_dpi VARCHAR(13) NOT NULL,
-    usuario_token LVARCHAR(1056) NOT NULL,
-    usuario_fecha_creacion DATE DEFAULT TODAY,
-    usuario_fotografia LVARCHAR(2056),
-    usuario_situacion SMALLINT DEFAULT 1
+-- Tabla principal de usuarios
+CREATE TABLE jemg_usuario(
+usuario_id SERIAL PRIMARY KEY,
+usuario_nom1 VARCHAR (50) NOT NULL,
+usuario_ape1 VARCHAR (50) NOT NULL,
+usuario_tel INT NOT NULL, 
+usuario_direc VARCHAR (150) NOT NULL,
+usuario_dpi VARCHAR (13) NOT NULL,
+usuario_correo VARCHAR (100) NOT NULL,
+usuario_contra LVARCHAR (1056) NOT NULL,
+usuario_token LVARCHAR (1056) NOT NULL,
+usuario_fecha_creacion DATE DEFAULT TODAY,
+usuario_fecha_contra DATE DEFAULT TODAY,
+usuario_fotografia LVARCHAR (2056),
+usuario_situacion SMALLINT DEFAULT 1
 );
 
+-- Tabla de aplicaciones del sistema
 CREATE TABLE jemg_aplicaciones(
     app_id SERIAL PRIMARY KEY,
     app_nombre_largo VARCHAR(250) NOT NULL,
@@ -22,6 +26,7 @@ CREATE TABLE jemg_aplicaciones(
     app_situacion SMALLINT DEFAULT 1
 );
 
+-- Tabla de permisos por aplicación
 CREATE TABLE jemg_permisos(
     permiso_id SERIAL PRIMARY KEY, 
     permiso_app_id INT NOT NULL,
@@ -33,6 +38,7 @@ CREATE TABLE jemg_permisos(
     FOREIGN KEY (permiso_app_id) REFERENCES jemg_aplicaciones(app_id) 
 );
 
+-- Tabla de asignación de permisos a usuarios
 CREATE TABLE jemg_asig_permisos(
     asignacion_id SERIAL PRIMARY KEY,
     asignacion_usuario_id INT NOT NULL,
@@ -47,6 +53,7 @@ CREATE TABLE jemg_asig_permisos(
     FOREIGN KEY (asignacion_permiso_id) REFERENCES jemg_permisos(permiso_id)
 );
 
+-- Tabla de rutas del sistema
 CREATE TABLE jemg_rutas(
     ruta_id SERIAL PRIMARY KEY,
     ruta_app_id INT NOT NULL,
@@ -56,10 +63,11 @@ CREATE TABLE jemg_rutas(
     FOREIGN KEY (ruta_app_id) REFERENCES jemg_aplicaciones(app_id)
 );
 
+-- Tabla de historial de actividades
 CREATE TABLE jemg_historial_act(
     historial_id SERIAL PRIMARY KEY,
     historial_usuario_id INT NOT NULL,
-    historial_fecha DATETIME YEAR TO MINUTE,
+    historial_fecha DATETIME YEAR TO MINUTE DEFAULT CURRENT,
     historial_ruta INT NOT NULL,
     historial_ejecucion LVARCHAR(1056) NOT NULL,
     historial_situacion SMALLINT DEFAULT 1,
@@ -67,34 +75,44 @@ CREATE TABLE jemg_historial_act(
     FOREIGN KEY (historial_ruta) REFERENCES jemg_rutas(ruta_id)
 );
 
--- TABLAS DEL MÓDULO DE COMISIONES
-
-CREATE TABLE jemg_comision(
-    comision_id SERIAL PRIMARY KEY,
-    comision_titulo VARCHAR(200) NOT NULL,
-    comision_descripcion LVARCHAR(2056),
-    comision_tipo VARCHAR(20) NOT NULL CHECK (comision_tipo IN ('transmisiones', 'informatica')),
-    comision_fecha_inicio DATETIME YEAR TO MINUTE NOT NULL,
-    comision_duracion_valor INT NOT NULL,
-    comision_duracion_tipo VARCHAR(10) NOT NULL CHECK (comision_duracion_tipo IN ('horas', 'dias')),
-    comision_estado VARCHAR(20) DEFAULT 'pendiente' CHECK (comision_estado IN ('pendiente', 'activa', 'finalizada', 'cancelada')),
-    comision_creado_por INT NOT NULL,
-    comision_fecha_creacion DATETIME YEAR TO MINUTE,
-    comision_fecha_fin_calculada DATETIME YEAR TO MINUTE,
-    comision_observaciones LVARCHAR(1056),
-    comision_situacion SMALLINT DEFAULT 1,
-    FOREIGN KEY (comision_creado_por) REFERENCES jemg_usuarios(usuario_id)
+-- Tabla de tipos de comisión
+CREATE TABLE jemg_tipos_comision(
+    tipo_id SERIAL PRIMARY KEY,
+    tipo_nombre VARCHAR(100) NOT NULL,
+    tipo_descripcion VARCHAR(250),
+    tipo_fecha_creacion DATE DEFAULT TODAY,
+    tipo_situacion SMALLINT DEFAULT 1
 );
 
-CREATE TABLE jemg_asignacion_comision(
-    asignacion_comision_id SERIAL PRIMARY KEY,
-    asignacion_comision_comision_id INT NOT NULL,
-    asignacion_comision_usuario_id INT NOT NULL,
-    asignacion_comision_fecha DATETIME YEAR TO MINUTE,
-    asignacion_comision_asignado_por INT NOT NULL,
-    asignacion_comision_observaciones LVARCHAR(1056),
-    asignacion_comision_situacion SMALLINT DEFAULT 1,
-    FOREIGN KEY (asignacion_comision_comision_id) REFERENCES jemg_comision(comision_id),
-    FOREIGN KEY (asignacion_comision_usuario_id) REFERENCES jemg_usuarios(usuario_id),
-    FOREIGN KEY (asignacion_comision_asignado_por) REFERENCES jemg_usuarios(usuario_id)
+-- Tabla principal de comisiones
+CREATE TABLE jemg_comisiones(
+    comision_id SERIAL PRIMARY KEY,
+    comision_titulo VARCHAR(200) NOT NULL,
+    comision_descripcion LVARCHAR(1056),
+    comision_tipo_id INT NOT NULL,
+    comision_fecha_inicio DATETIME YEAR TO MINUTE NOT NULL,
+    comision_fecha_fin DATETIME YEAR TO MINUTE NOT NULL,
+    comision_duracion_tipo CHAR(1) NOT NULL,
+    comision_duracion_valor INT NOT NULL,
+    comision_lugar VARCHAR(300),
+    comision_usuario_creo INT NOT NULL,
+    comision_fecha_creacion DATETIME YEAR TO MINUTE DEFAULT CURRENT,
+    comision_observaciones LVARCHAR(1056),
+    comision_situacion SMALLINT DEFAULT 1,
+    FOREIGN KEY (comision_tipo_id) REFERENCES jemg_tipos_comision(tipo_id),
+    FOREIGN KEY (comision_usuario_creo) REFERENCES jemg_usuarios(usuario_id)
+);
+
+-- Tabla de asignaciones de personal a comisiones
+CREATE TABLE jemg_asignaciones_comision(
+    asignacion_com_id SERIAL PRIMARY KEY,
+    asignacion_comision_id INT NOT NULL,
+    asignacion_usuario_id INT NOT NULL,
+    asignacion_fecha DATETIME YEAR TO MINUTE DEFAULT CURRENT,
+    asignacion_usuario_asigno INT NOT NULL,
+    asignacion_motivo VARCHAR(250),
+    asignacion_situacion SMALLINT DEFAULT 1,
+    FOREIGN KEY (asignacion_comision_id) REFERENCES jemg_comisiones(comision_id),
+    FOREIGN KEY (asignacion_usuario_id) REFERENCES jemg_usuarios(usuario_id),
+    FOREIGN KEY (asignacion_usuario_asigno) REFERENCES jemg_usuarios(usuario_id)
 );

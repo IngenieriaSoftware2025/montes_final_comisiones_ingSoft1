@@ -17,7 +17,8 @@ function s($html) {
 function isAuth() {
     session_start();
     if(!isset($_SESSION['login'])) {
-        header('Location: /');
+        $login = $_ENV['APP_NAME'];
+        header("Location: /montes_final_comisiones_ingSoft1");
     }
 }
 function isAuthApi() {
@@ -51,7 +52,7 @@ function hasPermission(array $permisos){
     }
 
     if(array_search(true, $comprobaciones) !== false){}else{
-        header('Location: /');
+        header('Location: /montes_final_comisiones_ingSoft1');
     }
 }
 
