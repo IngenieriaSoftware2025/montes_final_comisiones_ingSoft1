@@ -5,10 +5,12 @@ import { validarFormulario, Toast } from "../funciones"; //(validarFormulario y 
 import { lenguaje } from "../lenguaje"; //(lenguaje es un funcion interna del MVC)
 import { error } from "jquery";
 
-const FormUsuarios = document.getElementById('FormUsuarios');
+const formUsuario = document.getElementById('formUsuario');
 const BtnGuardar = document.getElementById('BtnGuardar');
 const BtnModificar = document.getElementById('BtnModificar');
 const BtnLimpiar = document.getElementById('BtnLimpiar');
+const BtnBuscar = document.getElementById('BtnBuscar');
+const BtnEliminar = document.getElementById('BtnEliminar');
 const validarTelefono = document.getElementById('usuario_tel');
 const validarDpi = document.getElementById('usuario_dpi');
 
@@ -21,12 +23,12 @@ const validacionTelefono = () => {
         validarTelefono.classList.remove('is-valid', 'is-invalid');
 
     } else {
-        if (cantidadDigitos.length < 8 || cantidadDigitos.length > 9) {
+        if (cantidadDigitos.length < 8) {
             Swal.fire({
                 position: "center",
                 icon: "warning",
-                title: "Revise el número de teléfono",
-                text: "La cantidad de dígitos debe ser entre 8 y 9 dígitos",
+                title: "Revice el número de telefono",
+                text: "La cantidad de digitos debe de ser igual a 8 digitos",
                 showConfirmButton: false,
                 timer: 3000
             })
@@ -55,8 +57,8 @@ const validacionDpi = () => {
             Swal.fire({
                 position: "center",
                 icon: "warning",
-                title: "Revise el número de DPI",
-                text: "La cantidad de dígitos debe ser igual a 13 dígitos",
+                title: "Revice el número de DPI",
+                text: "La cantidad de digitos debe de ser igual a 13 digitos",
                 showConfirmButton: false,
                 timer: 3000
             })
@@ -77,8 +79,8 @@ const guardarUsuario = async e => {
   
   try {
 
-    const body = new FormData(FormUsuarios)
-    const url = "/montes_final_comisiones_ingSoft1/usuarios"
+    const body = new FormData(formUsuario)
+    const url = "/montes_final_comisiones_ingSoft1/usuarios/guardar"
     const config = {
       method: 'POST',
       body
@@ -91,8 +93,8 @@ const guardarUsuario = async e => {
     let icon = 'info'
     if (codigo == 1) {
       icon = 'success'
-      FormUsuarios.reset()
-      BuscarUsuarios();
+      formUsuario.reset()
+      BuscarUsuario();
 
     } else if (codigo == 2) {
       icon = 'warning'
@@ -114,7 +116,6 @@ const guardarUsuario = async e => {
   }
 
 }
-
 
 const datatable = new DataTable('#TableUsuarios', {
     dom: `
@@ -147,7 +148,7 @@ const datatable = new DataTable('#TableUsuarios', {
             render: (data, type, row, meta) => {
                 if (data && data !== null && data !== '') {
                     // Cambiar la ruta para que apunte correctamente
-                    return `<img src="${data}" alt="Foto usuario" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjNjY2NjY2Ii8+CjxwYXRoIGQ9Ik0yNSAyM0MyNy43NjE0IDIzIDMwIDIwLjc2MTQgMzAgMThDMzAgMTUuMjM4NiAyNy43NjE0IDEzIDI1IDEzQzIyLjIzODYgMTMgMjAgMTUuMjM4NiAyMCAxOEMyMCAyMC43NjE0IDIyLjIzODYgMjMgMjUgMjNaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMjUgMjVDMjAuMDI5NCAyNSAxNiAyOS4wMjk0IDE2IDM0VjM3SDM0VjM0QzM0IDI5LjAyOTQgMjkuOTcwNiAyNSAyNSAyNVoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=';">`;
+                    return `<img src="/montes_final_comisiones_ingSoft1/public/${data}" alt="Foto usuario" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjNjY2NjY2Ii8+CjxwYXRoIGQ9Ik0yNSAyM0MyNy43NjE0IDIzIDMwIDIwLjc2MTQgMzAgMThDMzAgMTUuMjM4NiAyNy43NjE0IDEzIDI1IDEzQzIyLjIzODYgMTMgMjAgMTUuMjM4NiAyMCAxOEMyMCAyMC43NjE0IDIyLjIzODYgMjMgMjUgMjNaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMjUgMjVDMjAuMDI5NCAyNSAxNiAyOS4wMjk0IDE2IDM0VjM3SDM0VjM0QzM0IDI5LjAyOTQgMjkuOTcwNiAyNSAyNSAyNVoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=';">`;
                 } else {
                     return `<div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
                                 <i class="bi bi-person text-white"></i>
@@ -156,41 +157,10 @@ const datatable = new DataTable('#TableUsuarios', {
             }
         },
         { title: 'Primer Nombre', data: 'usuario_nom1' },
-        { 
-            title: 'Segundo Nombre', 
-            data: 'usuario_nom2',
-            render: (data, type, row, meta) => {
-                return data && data !== null ? data : '-';
-            }
-        },
         { title: 'Primer Apellido', data: 'usuario_ape1' },
-        { 
-            title: 'Segundo Apellido', 
-            data: 'usuario_ape2',
-            render: (data, type, row, meta) => {
-                return data && data !== null ? data : '-';
-            }
-        },
         { title: 'Correo', data: 'usuario_correo' },
-        { title: 'Teléfono', data: 'usuario_tel' },
+        { title: 'Telefono', data: 'usuario_tel' },
         { title: 'DPI', data: 'usuario_dpi' },
-        { 
-            title: 'Dirección', 
-            data: 'usuario_direc',
-            width: '15%'
-        },
-        {
-            title: 'Situación',
-            data: 'usuario_situacion',
-            width: '8%',
-            render: (data, type, row, meta) => {
-                if (data == 1) {
-                    return '<span class="badge bg-success">Activo</span>';
-                } else {
-                    return '<span class="badge bg-danger">Inactivo</span>';
-                }
-            }
-        },
         {
             title: 'Acciones',
             data: 'usuario_id',
@@ -202,14 +172,11 @@ const datatable = new DataTable('#TableUsuarios', {
                      <button class='btn btn-warning modificar mx-1' 
                          data-id="${data}" 
                          data-nom1="${row.usuario_nom1}"  
-                         data-nom2="${row.usuario_nom2 || ''}"  
                          data-ape1="${row.usuario_ape1}"  
-                         data-ape2="${row.usuario_ape2 || ''}"  
                          data-tel="${row.usuario_tel}"  
                          data-direc="${row.usuario_direc}"  
                          data-dpi="${row.usuario_dpi}"  
                          data-correo="${row.usuario_correo}"  
-                         data-situacion="${row.usuario_situacion}">
                          <i class='bi bi-pencil-square me-1'></i> Modificar
                      </button>
                      <button class='btn btn-danger eliminar mx-1' 
@@ -222,8 +189,8 @@ const datatable = new DataTable('#TableUsuarios', {
     ],
 })
 
-const BuscarUsuarios = async () =>{
-    const url = '/montes_final_comisiones_ingSoft1/usuarios';
+const BuscarUsuario = async () =>{
+    const url = '/montes_final_comisiones_ingSoft1/usuarios/buscar';
     const config = {
         method: 'GET'
     }
@@ -233,15 +200,17 @@ const BuscarUsuarios = async () =>{
         const datos = await respuesta.json();
         const { codigo, mensaje, data } = datos
 
-        if (codigo === 1) {
+        if (codigo ===1) {
+            // Mostrar la sección de la tabla
+            document.getElementById('seccionTabla').classList.remove('d-none');
             
             Swal.fire({
                 position: "center",
                 icon: "success",
-                title: "Éxito",
+                title: "Exito",
                 text: mensaje,
                 showConfirmButton: false,
-                timer: 2000,
+                timer: 3000,
             });
 
             datatable.clear().draw();
@@ -250,8 +219,8 @@ const BuscarUsuarios = async () =>{
         } else {
             Swal.fire({
                 position: "center",
-                icon: "info",
-                title: "Información",
+                icon: "Info",
+                title: "Error",
                 text: mensaje,
                 showConfirmButton: false,
                 timer: 3000,
@@ -270,22 +239,11 @@ const llenarFormulario = (event) => {
 
     document.getElementById('usuario_id').value = datos.id
     document.getElementById('usuario_nom1').value = datos.nom1
-    document.getElementById('usuario_nom2').value = datos.nom2
     document.getElementById('usuario_ape1').value = datos.ape1
-    document.getElementById('usuario_ape2').value = datos.ape2
     document.getElementById('usuario_tel').value = datos.tel
     document.getElementById('usuario_direc').value = datos.direc
     document.getElementById('usuario_dpi').value = datos.dpi
     document.getElementById('usuario_correo').value = datos.correo
-    document.getElementById('usuario_situacion').value = datos.situacion
-
-    // Limpiar campos de contraseña en modo edición
-    document.getElementById('usuario_contra').value = ''
-    document.getElementById('confirmar_contra').value = ''
-    
-    // Hacer campos de contraseña opcionales en edición
-    document.getElementById('usuario_contra').removeAttribute('required')
-    document.getElementById('confirmar_contra').removeAttribute('required')
 
     BtnGuardar.classList.add('d-none');
     BtnModificar.classList.remove('d-none');
@@ -297,61 +255,30 @@ const llenarFormulario = (event) => {
 }
 
 const limpiarTodo = () => {
-    FormUsuarios.reset();
-    
-    // Restaurar campos de contraseña como requeridos
-    document.getElementById('usuario_contra').setAttribute('required', 'required')
-    document.getElementById('confirmar_contra').setAttribute('required', 'required')
-    
+    formUsuario.reset();
     BtnGuardar.classList.remove('d-none');
     BtnModificar.classList.add('d-none');
 
 }
 
 const ModificarUsuario = async (event) => {
-    event.preventDefault();
+    event.preventDefault(),
     BtnModificar.disabled = true;
 
-    // Validar solo campos visibles y requeridos
-    const camposRequeridos = ['usuario_nom1', 'usuario_ape1', 'usuario_tel', 'usuario_direc', 'usuario_dpi', 'usuario_correo'];
-    const camposVacios = camposRequeridos.filter(campo => {
-        const elemento = document.getElementById(campo);
-        return !elemento.value.trim();
-    });
-
-    if (camposVacios.length > 0) {
+    if (!validarFormulario(formUsuario, [''])) {
         Swal.fire({
-            position: "center",
-            icon: "warning",
-            title: "FORMULARIO INCOMPLETO",
-            text: "Debe llenar todos los campos obligatorios",
-            showConfirmButton: false,
-            timer: 3000,
-        });
-        BtnModificar.disabled = false;
-        return;        
-    }
-
-    // Validar contraseñas solo si se proporcionan
-    const contrasena = document.getElementById('usuario_contra').value;
-    const confirmarContrasena = document.getElementById('confirmar_contra').value;
-    
-    if (contrasena || confirmarContrasena) {
-        if (contrasena !== confirmarContrasena) {
-            Swal.fire({
                 position: "center",
                 icon: "warning",
-                title: "CONTRASEÑAS NO COINCIDEN",
-                text: "Las contraseñas deben ser iguales",
+                title: "FORMULARIO INCOMPLETO",
+                text: "Debe de validar todos los campos",
                 showConfirmButton: false,
                 timer: 3000,
             });
             BtnModificar.disabled = false;
-            return;
-        }
+            return;        
     }
 
-    const body = new FormData(FormUsuarios);
+    const body = new FormData(formUsuario);
 
     const url = '/montes_final_comisiones_ingSoft1/usuarios/modificar';
     const config = {
@@ -369,19 +296,19 @@ const ModificarUsuario = async (event) => {
             Swal.fire({
                 position: "center",
                 icon: "success",
-                title: "Éxito",
+                title: "Exito",
                 text: mensaje,
                 showConfirmButton: false,
                 timer: 3000,
             });
 
             limpiarTodo();
-            BuscarUsuarios();
+            BuscarUsuario();
 
         } else {
             Swal.fire({
                 position: "center",
-                icon: "error",
+                icon: "Info",
                 title: "Error",
                 text: mensaje,
                 showConfirmButton: false,
@@ -401,12 +328,12 @@ const EliminarUsuario = async (e) => {
 
     const AlertaConfirmarEliminar = await Swal.fire({
         position: "center",
-        icon: "question",
+        icon: "info",
         title: "¿Desea ejecutar esta acción?",
-        text: "Usted eliminará un usuario",
+        text: "Usted eliminara un usuario",
         showConfirmButton: true,
-        confirmButtonText: "Sí, eliminar",
-        confirmButtonColor: "#d33",
+        confirmButtonText: "Si",
+        confirmButtonColor: "red",
         cancelButtonText: "Cancelar",
         showCancelButton: true
     });
@@ -432,47 +359,38 @@ const EliminarUsuario = async (e) => {
                 position: "center",
                 icon: "success",
                 title: "Éxito",
-                text: mensaje,
-                showConfirmButton: false,
-                timer: 2000
+                text: mensaje
             });
-            BuscarUsuarios();
+            BuscarUsuario();
         } else {
             await Swal.fire({
                 position: "center",
-                icon: "error",
+                icon: "info",
                 title: "Error",
                 text: mensaje,
                 showConfirmButton: false,
-                timer: 3000
+                timer: 1000
             });
         }
 
     } catch (error) {
         console.log(error);
-        await Swal.fire({
-            position: "center",
-            icon: "error",
-            title: "Error",
-            text: "Error de conexión",
-            showConfirmButton: false,
-            timer: 3000
-        });
     }
 };
 
-
 //Eventos
-BuscarUsuarios(); // Cargar usuarios al iniciar
+
+BuscarUsuario();
 validarTelefono.addEventListener('change', validacionTelefono);
 validarDpi.addEventListener('change', validacionDpi);
 
 //guardar
-FormUsuarios.addEventListener('submit', guardarUsuario)
+formUsuario.addEventListener('submit', guardarUsuario)
 
 //btn limpiar
 BtnLimpiar.addEventListener('click', limpiarTodo);
 BtnModificar.addEventListener('click', ModificarUsuario);
+BtnBuscar.addEventListener('click', BuscarUsuario);
 
 //datatable
 datatable.on('click', '.eliminar', EliminarUsuario);

@@ -3,17 +3,12 @@
 CREATE TABLE jemg_usuarios(
     usuario_id SERIAL PRIMARY KEY,
     usuario_nom1 VARCHAR(50) NOT NULL,
-    usuario_nom2 VARCHAR(50),
     usuario_ape1 VARCHAR(50) NOT NULL,
-    usuario_ape2 VARCHAR(50),
     usuario_tel INT NOT NULL, 
     usuario_direc VARCHAR(150) NOT NULL,
     usuario_dpi VARCHAR(13) NOT NULL,
-    usuario_correo VARCHAR(100) NOT NULL,
-    usuario_contra LVARCHAR(1056) NOT NULL,
     usuario_token LVARCHAR(1056) NOT NULL,
     usuario_fecha_creacion DATE DEFAULT TODAY,
-    usuario_fecha_contra DATE DEFAULT TODAY,
     usuario_fotografia LVARCHAR(2056),
     usuario_situacion SMALLINT DEFAULT 1
 );
