@@ -7,6 +7,7 @@
     <link rel="shortcut icon" href="<?= asset('images/cit.png') ?>" type="image/x-icon">
     <link rel="stylesheet" href="<?= asset('build/styles.css') ?>">
     <title>Login Brigada de Transmisiones</title>
+    
 </head>
 
 <body>

@@ -5,6 +5,10 @@
             <div class="text-center mb-4">
               <img src="<?= asset('./images/login.jpg') ?>" alt="Logo" width="200px" class="img-fluid rounded-circle">
             </div>
+
+
+            <h4>user 2511729290101</h4>
+    <h4>pass 12345678</h4>
             <div class="row mb-3">
               <div class="col">
                 <label for="usuario_dpi" class="form-label">Ingrese su DPI</label>
