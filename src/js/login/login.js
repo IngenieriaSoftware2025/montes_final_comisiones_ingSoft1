@@ -1,5 +1,11 @@
+alert('Hola desde login')
+
+
 import Swal from 'sweetalert2';
 import { validarFormulario } from '../funciones';
+import { Alert } from 'bootstrap';
+
+
 
 
 const FormLogin = document.getElementById('FormLogin');
@@ -75,3 +81,5 @@ const login = async (e) => {
 
     BtnIniciar.disabled = false;
 }
+
+FormLogin.addEventListener('submit', login);

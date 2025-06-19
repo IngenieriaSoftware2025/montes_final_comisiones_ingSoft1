@@ -20,7 +20,7 @@ $router->get('/API/logout', [AppController::class,'logout']);
 $router->get('/inicio', [AppController::class,'renderInicio']);
 
 //RUTAS PARA USUARIOS
-$router->get('/usuarios', [UsuariosController::class,'renderizarPagina']);
+$router->get('/usuarios', [UsuariosController::class,'index']);
 $router->post('/usuarios/guardar', [UsuariosController::class,'guardarAPI']);
 $router->get('/usuarios/buscar', [UsuariosController::class,'buscarUsuarios']);
 $router->post('/usuarios/modificar', [UsuariosController::class,'modificarUsuario']);
