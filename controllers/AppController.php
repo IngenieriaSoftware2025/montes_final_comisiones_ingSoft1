@@ -24,7 +24,7 @@ class AppController
             $usario = filter_var($_POST['usuario_dpi'], FILTER_SANITIZE_NUMBER_INT);
             $constrasena = htmlspecialchars($_POST['usuario_contra']);
 
-            $queyExisteUser = "SELECT usuario_id, usuario_nom1, usuario_contra FROM jemg_usuarios WHERE usuario_dpi = $usario AND usuario_situacion = 1";
+            $queyExisteUser = "SELECT usuario_id, usuario_nom1, usuario_contra FROM jemg_usuario WHERE usuario_dpi = $usario AND usuario_situacion = 1";
 
             $ExisteUsuario = ActiveRecord::fetchArray($queyExisteUser)[0];
 
